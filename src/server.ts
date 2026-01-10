@@ -1,9 +1,13 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, {Express, Request, Response, NextFunction} from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import { testConnection } from './config/database';
 
 // environmental variables
-dotenv.config();
+
+testConnection()
 
 const app: Express = express();
 const PORT = process.env.PORT || 3000;
