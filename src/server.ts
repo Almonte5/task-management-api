@@ -4,7 +4,7 @@ dotenv.config();
 import express, {Express, Request, Response, NextFunction} from 'express';
 import cors from 'cors';
 import { testConnection } from './config/database';
-
+import authRoutes from './routes/auth.routes';
 // environmental variables
 
 testConnection()
@@ -22,6 +22,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     console.log(`${req.method} ${req.path}`);
     next();
 });
+
+app.use('/api/auth', authRoutes);
 
 // health check endpoint
 app.get('/health', (req: Request, res: Response) => {
