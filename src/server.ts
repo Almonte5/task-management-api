@@ -1,13 +1,13 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-import express, {Express, Request, Response, NextFunction} from 'express';
+import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import { testConnection } from './config/database';
 import authRoutes from './routes/auth.routes';
-// environmental variables
+import taskRoutes from './routes/task.routes';
 
-testConnection()
+testConnection();
 
 const app: Express = express();
 const PORT = process.env.PORT || 3000;
@@ -17,13 +17,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// request logging middleware
+// request logging middleware (BEFORE routes)
 app.use((req: Request, res: Response, next: NextFunction) => {
     console.log(`${req.method} ${req.path}`);
     next();
 });
 
+// routes
 app.use('/api/auth', authRoutes);
+app.use('/api/tasks', taskRoutes);
 
 // health check endpoint
 app.get('/health', (req: Request, res: Response) => {
@@ -36,7 +38,3 @@ app.listen(PORT, () => {
 });
 
 export default app;
-
-
-
-
