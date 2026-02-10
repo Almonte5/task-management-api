@@ -29,3 +29,21 @@ export const createTask = async (req: Request, res: Response) => {
         res.status(500).json({ error: 'Server error' });
     }
 };
+
+export const getTasks = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        if (!userId){
+            return res.status(401).json({error: 'Unauthorized'});
+        }
+        const result = await pool.query(
+            'SELECT * FROM tasks WHERE user_id = $1',
+            [userId]
+        )
+        res.status(200).json({ tasks: result.rows})
+
+    } catch (error) {
+        console.error("Error Fetching tasks:", error);
+        res.status(500).json({error: 'Server error'})
+    }
+};
