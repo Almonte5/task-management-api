@@ -33,18 +33,42 @@ export const createTask = async (req: Request, res: Response) => {
 export const getTasks = async (req: Request, res: Response) => {
     try {
         const userId = req.user?.userId;
-        if (!userId){
-            return res.status(401).json({error: 'Unauthorized'});
+        const { status, priority, sort } = req.query;
+
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
         }
-        const result = await pool.query(
-            'SELECT * FROM tasks WHERE user_id = $1',
-            [userId]
-        )
-        res.status(200).json({ tasks: result.rows})
+
+        let query = 'SELECT * FROM tasks WHERE user_id = $1';
+        const params: any[] = [userId];
+        let paramCount = 1;
+
+        if (status) {
+            paramCount++;
+            query += ` AND status = $${paramCount}`;
+            params.push(status);
+        }
+
+        if (priority) {
+            paramCount++;
+            query += ` AND priority = $${paramCount}`;
+            params.push(priority);
+        }
+
+        if (sort === 'due_date') {
+            query += ' ORDER BY due_date ASC';
+        } else if (sort === 'priority') {
+            query += ' ORDER BY priority ASC';
+        } else {
+            query += ' ORDER BY created_at DESC';
+        }
+
+        const result = await pool.query(query, params);
+        res.status(200).json({ tasks: result.rows });
 
     } catch (error) {
-        console.error("Error Fetching tasks:", error);
-        res.status(500).json({error: 'Server error'})
+        console.error("Error fetching tasks:", error);
+        res.status(500).json({ error: 'Server error' });
     }
 };
 
