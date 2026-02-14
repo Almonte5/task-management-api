@@ -78,3 +78,22 @@ export const login = async (req: Request, res: Response) => {
     }
 
 };
+
+export const getMe = async (req: Request, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        
+        if (!userId) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
+
+        const result = await pool.query(
+            ' SELECT id, email, name, created_at FROM users WHERE id = $1',
+            [userId]
+        )
+        res.status(200).json({ user: result.rows[0] });
+    }catch (error) {
+        console.error("Error fetching user:", error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
