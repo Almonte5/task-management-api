@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import pool from '../config/database';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { sendEmail } from '../services/emailService';
 
 export const register = async (req: Request, res: Response) => {
     try {
@@ -94,6 +96,36 @@ export const getMe = async (req: Request, res: Response) => {
         res.status(200).json({ user: result.rows[0] });
     }catch (error) {
         console.error("Error fetching user:", error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body;
+        const userResult = await pool.query(
+            'SELECT * FROM users WHERE email = $1',
+            [email]
+        )
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const token = crypto.randomBytes(32).toString('hex');
+        const expires = new Date(Date.now() + 3600000);
+        
+        await pool.query(
+            'UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE email = $3',
+            [token, expires, email]
+        )
+
+        const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+        await sendEmail(email, 'Password Reset', `Click here to reset your password: ${resetLink}`);
+
+        res.json({ message: 'Password reset email sent' });
+
+    }catch (error) {
+        console.error('Forgot password error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 };
