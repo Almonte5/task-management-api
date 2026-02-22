@@ -33,7 +33,7 @@ export const createTask = async (req: Request, res: Response) => {
 export const getTasks = async (req: Request, res: Response) => {
     try {
         const userId = req.user?.userId;
-        const { status, priority, sort } = req.query;
+        const { status, priority, sort, search } = req.query; // Add search here
 
         if (!userId) {
             return res.status(401).json({ error: 'Unauthorized' });
@@ -53,6 +53,12 @@ export const getTasks = async (req: Request, res: Response) => {
             paramCount++;
             query += ` AND priority = $${paramCount}`;
             params.push(priority);
+        }
+
+        if (search) {
+            paramCount++;
+            query += ` AND (title ILIKE $${paramCount} OR description ILIKE $${paramCount})`;
+            params.push(`%${search}%`);
         }
 
         if (sort === 'due_date') {
