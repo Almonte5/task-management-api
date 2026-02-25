@@ -28,4 +28,24 @@ export const createSubtask = async (req: Request, res: Response) => {
     }
 };
 
+export const getSubtasks = async (req: Request, res: Response) => {
+    try {
+        const taskId = req.params.id;
+        
+        if (!taskId){
+            return res.status(401).json({ error: 'Task ID is required' });
+        }
 
+        const result = await pool.query(
+            'SELECT * FROM subtasks WHERE task_id = $1',
+            [taskId]
+        );
+
+        res.status(200).json({
+            subtasks: result.rows
+        });
+    }catch (error) {
+        console.error("Error fetching subtasks:", error);
+        res.status(500).json({ error: 'Server error' });
+    }
+};
